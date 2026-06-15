@@ -382,6 +382,7 @@ function doLogin() {
   if (code !== CODE) { err.style.display = 'block'; err.textContent = 'Código incorrecto.'; return; }
   err.style.display = 'none';
   currentUser = name;
+  localStorage.setItem('fusionsport_user', name);
   document.getElementById('headerUserName').textContent = name;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'flex';
@@ -394,6 +395,7 @@ function doLogin() {
 
 function doLogout() {
   currentUser = null;
+  localStorage.removeItem('fusionsport_user');
   if (unsubscribeLists) unsubscribeLists();
   if (unsubscribeRegistry) unsubscribeRegistry();
   tabs = []; activeTabId = null;
@@ -810,6 +812,21 @@ window.addEventListener('appinstalled', () => {
 // ── SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./fusion-sw.js').catch(console.error);
+}
+
+
+// Auto-login if session exists
+const savedUser = localStorage.getItem('fusionsport_user');
+if (savedUser) {
+  currentUser = savedUser;
+  document.getElementById('headerUserName').textContent = savedUser;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  setTimeout(() => {
+    const h = document.querySelector('.app-header');
+    if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+  }, 50);
+  startListening();
 }
 
 // Login on Enter
