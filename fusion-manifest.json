@@ -2,7 +2,7 @@
   "name": "FusionSport Cumpleaños",
   "short_name": "FusionSport",
   "description": "Gestión de cumpleaños FusionSport Cuenca",
-  "start_url": "./fusion-cumples.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#FFC300",
