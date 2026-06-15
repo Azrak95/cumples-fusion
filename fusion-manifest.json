@@ -1,0 +1,19 @@
+{
+  "name": "FusionSport Cumpleaños",
+  "short_name": "FusionSport",
+  "description": "Gestión de cumpleaños FusionSport Cuenca",
+  "start_url": "./fusion-cumples.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFC300",
+  "theme_color": "#FFC300",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
