@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FusionSport — Gestión de Cumpleaños</title>
+<link rel="manifest" href="fusion-manifest.json">
+<meta name="theme-color" content="#FFC300">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FusionSport">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  :root {
+    --red: #FFC300;
+    --red-dark: #E6AF00;
+    --red-light: #FFD740;
+    --yellow: #FFD600;
+    --blue: #1565C0;
+    --bg: #F5F5F5;
+    --white: #FFFFFF;
+    --text: #1A1A1A;
+    --text2: #555;
+    --text3: #888;
+    --border: #DDD;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #FFC300;
+    padding: 2rem;
+  }
+  .login-logo { font-size: 28px; font-weight: 900; color: #1a1a1a; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .login-logo span { color: var(--yellow); }
+  .login-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 2rem; }
+  .login-card {
+    background: var(--white); border-radius: 16px; padding: 2rem;
+    width: 100%; max-width: 360px; box-shadow: var(--shadow-lg);
+  }
+  .login-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 1.5rem; color: var(--text); }
+  .login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+  .login-field label { font-size: 13px; font-weight: 700; color: var(--text2); }
+  .login-field input {
+    border: 2px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 14px; font-size: 15px; font-family: inherit;
+    outline: none; transition: border-color .2s;
+  }
+  .login-field input:focus { border-color: var(--red); }
+  .login-error { font-size: 13px; color: var(--red); font-weight: 700; margin-bottom: 0.75rem; display: none; }
+  .btn-primary {
+    background: var(--red); color: #1a1a1a; border: none;
+    border-radius: var(--radius-sm); padding: 12px; font-size: 15px;
+    font-weight: 800; font-family: inherit; cursor: pointer; width: 100%;
+    transition: background .2s;
+  }
+  .btn-primary:hover { background: var(--red-dark); }
+
+  /* ── APP ── */
+  #appScreen { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  .app-header {
+    background: #FFC300; color: #1a1a1a;
+    padding: 10px 16px 0; position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .header-logo { font-size: 18px; font-weight: 900; }
+  .header-logo span { color: var(--yellow); }
+  .header-user { font-size: 13px; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
+  .btn-logout {
+    background: rgba(0,0,0,0.12); border: none; color: #1a1a1a;
+    border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-logout:hover { background: rgba(0,0,0,0.2); }
+
+  /* Tabs */
+  .tabs-bar { display: flex; align-items: flex-end; gap: 4px; overflow-x: auto; padding-bottom: 0; }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,0,0,0.12); color: rgba(0,0,0,0.65);
+    border-radius: 8px 8px 0 0; padding: 7px 12px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    white-space: nowrap; transition: background .15s; flex-shrink: 0;
+    border: none; font-family: inherit;
+  }
+  .tab.active { background: var(--bg); color: #1a1a1a; font-weight: 900; }
+  .tab .tab-close {
+    font-size: 14px; opacity: 0.6; cursor: pointer;
+    background: none; border: none; color: inherit; padding: 0 2px;
+    line-height: 1; font-family: inherit;
+  }
+  .tab .tab-close:hover { opacity: 1; }
+  .tab-add {
+    background: rgba(0,0,0,0.12); border: none; color: #1a1a1a;
+    border-radius: 8px 8px 0 0; padding: 7px 12px;
+    font-size: 18px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+    font-family: inherit; line-height: 1;
+  }
+  .tab-add:hover { background: rgba(0,0,0,0.22); }
+
+  /* Secondary nav */
+  .sec-nav {
+    background: var(--white); border-bottom: 2px solid var(--border);
+    display: flex; gap: 0;
+    position: fixed; top: var(--header-h, 88px); left: 0; right: 0; z-index: 99;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .sec-nav-btn {
+    flex: 1; background: none; border: none; padding: 12px;
+    font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+    color: var(--text2); border-bottom: 3px solid transparent; transition: all .15s;
+  }
+  .sec-nav-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 900; }
+
+  /* Content */
+  .app-content { flex: 1; padding: 1rem; padding-top: 140px; max-width: 700px; margin: 0 auto; width: 100%; }
+
+  /* List view */
+  .list-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .list-title-input {
+    font-size: 18px; font-weight: 800; font-family: inherit;
+    border: 2px solid transparent; border-radius: var(--radius-sm);
+    padding: 4px 8px; background: transparent; color: var(--text);
+    flex: 1; min-width: 160px; outline: none;
+  }
+  .list-title-input:focus { border-color: var(--red); background: var(--white); }
+  .list-date { font-size: 13px; color: var(--text3); font-weight: 600; white-space: nowrap; }
+
+  /* Table */
+  .kids-table { width: 100%; border-collapse: collapse; background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .kids-table thead { background: var(--red); color: #1a1a1a; }
+  .kids-table th { padding: 10px 12px; font-size: 13px; font-weight: 800; text-align: left; }
+  .kids-table th:last-child { width: 36px; }
+  .kids-table tbody tr { border-bottom: 1px solid var(--border); }
+  .kids-table tbody tr:last-child { border-bottom: none; }
+  .kids-table td { padding: 6px 8px; }
+  .kid-num { font-size: 12px; color: var(--text3); font-weight: 700; text-align: center; width: 32px; }
+  .kid-name-input, .kid-menu-select {
+    width: 100%; border: 1px solid transparent; border-radius: 6px;
+    padding: 6px 8px; font-size: 14px; font-family: inherit;
+    background: transparent; color: var(--text); outline: none; transition: border-color .15s;
+  }
+  .kid-name-input:focus, .kid-menu-select:focus { border-color: var(--red); background: var(--white); }
+  .kid-menu-select { cursor: pointer; }
+  .kid-delete {
+    background: none; border: none; color: var(--border); font-size: 18px;
+    cursor: pointer; padding: 4px; line-height: 1; transition: color .15s;
+  }
+  .kid-delete:hover { color: var(--red); }
+
+  .add-kid-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: 2px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 10px 16px; font-size: 14px; font-weight: 700; color: var(--text3);
+    cursor: pointer; width: 100%; margin-top: 8px; font-family: inherit;
+    transition: all .15s;
+  }
+  .add-kid-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Summary */
+  .summary-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 1rem 1.25rem; margin-top: 1rem;
+  }
+  .summary-title { font-size: 14px; font-weight: 800; color: var(--red); margin-bottom: 0.75rem; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .summary-item {
+    background: var(--bg); border-radius: var(--radius-sm);
+    padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .summary-food { font-size: 13px; font-weight: 700; color: var(--text2); }
+  .summary-count {
+    background: var(--red); color: #1a1a1a;
+    border-radius: 20px; padding: 2px 10px; font-size: 13px; font-weight: 800;
+  }
+  .summary-total {
+    margin-top: 10px; font-size: 14px; font-weight: 800; color: var(--text);
+    display: flex; gap: 16px;
+  }
+
+  /* Action buttons */
+  .action-btns { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
+  .btn-save {
+    flex: 1; background: var(--blue); color: var(--white); border: none;
+    border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 800;
+    font-family: inherit; cursor: pointer; transition: background .2s; min-width: 140px;
+  }
+  .btn-save:hover { background: #0D47A1; }
+  .btn-clear {
+    flex: 1; background: none; color: #D48F00; border: 2px solid var(--red);
+    border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 800;
+    font-family: inherit; cursor: pointer; transition: all .2s; min-width: 140px;
+  }
+  .btn-clear:hover { background: var(--red); color: var(--white); }
+
+  /* Registry */
+  .registry-list { display: flex; flex-direction: column; gap: 10px; }
+  .registry-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 1rem 1.25rem;
+  }
+  .registry-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .registry-card-title { font-size: 15px; font-weight: 800; color: var(--text); }
+  .registry-card-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .registry-delete {
+    background: none; border: none; color: var(--border); font-size: 18px;
+    cursor: pointer; padding: 2px; transition: color .15s;
+  }
+  .registry-delete:hover { color: var(--red); }
+  .registry-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+  .registry-tag {
+    background: var(--bg); border-radius: 20px; padding: 3px 10px;
+    font-size: 12px; font-weight: 700; color: var(--text2);
+  }
+  .registry-tag span { color: var(--red); }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 15px; font-weight: 600; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 999; padding: 1rem;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 16px; padding: 1.5rem;
+    max-width: 360px; width: 100%; box-shadow: var(--shadow-lg);
+  }
+  .modal h3 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--text2); margin-bottom: 1.25rem; line-height: 1.5; }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-modal-cancel {
+    flex: 1; background: none; border: 2px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .btn-modal-confirm {
+    flex: 1; background: var(--red); color: #1a1a1a; border: none;
+    border-radius: var(--radius-sm); padding: 10px; font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-modal-confirm.blue { background: var(--blue); }
+
+  .hidden { display: none !important; }
+
+  .install-btn {
+    display: none; margin-top: 1rem; background: #1a1a1a; color: var(--white);
+    border: none; border-radius: var(--radius-sm); padding: 12px 24px;
+    font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer;
+    width: 100%; max-width: 360px;
+  }
+  .install-btn:hover { background: #333; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <img src="https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png" alt="FusionSport" style="width:200px;height:auto;display:block;margin:0 auto 12px;">
+  <div class="login-sub" style="color:rgba(0,0,0,0.55);font-weight:700;font-size:14px;">Gestión de cumpleaños</div>
+  <div class="login-card">
+    <h2>Acceso monitores</h2>
+    <div class="login-field">
+      <label>Tu nombre</label>
+      <input type="text" id="loginName" placeholder="Ej: María" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Código de acceso</label>
+      <input type="password" id="loginCode" placeholder="••••••••">
+    </div>
+    <div class="login-error" id="loginError">Código incorrecto. Inténtalo de nuevo.</div>
+    <button class="btn-primary" id="btnLogin">Entrar</button>
+  </div>
+  <button class="install-btn" id="installBtn">📲 Instalar app en el móvil</button>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="app-header">
+    <div class="header-top">
+      <img src="https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png" alt="FusionSport" style="height:40px;width:auto;">
+      <div class="header-user">
+        <span id="headerUserName"></span>
+        <button class="btn-logout" id="btnLogout">Salir</button>
+      </div>
+    </div>
+    <div class="tabs-bar" id="tabsBar">
+      <button class="tab-add" id="btnAddTab" title="Nueva lista">+</button>
+    </div>
+  </div>
+
+  <div class="sec-nav">
+    <button class="sec-nav-btn active" id="navLists" id="navLists">📋 Listas</button>
+    <button class="sec-nav-btn" id="navRegistry" id="navRegistry">🗂 Registro</button>
+  </div>
+
+  <div class="app-content">
+    <!-- LIST VIEW -->
+    <div id="viewLists">
+      <div id="noTabsMsg" class="empty-state hidden">Pulsa + para crear una nueva lista de cumpleaños.</div>
+      <div id="listContent"></div>
+    </div>
+
+    <!-- REGISTRY VIEW -->
+    <div id="viewRegistry" class="hidden">
+      <div id="registryList" class="registry-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMsg"></p>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="window._closeModal()">Cancelar</button>
+      <button class="btn-modal-confirm" id="modalConfirm">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleRegistry(id) {
+  const el = document.getElementById('exp-' + id);
+  const btn = document.getElementById('exp-btn-' + id);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  btn.textContent = open ? 'Cerrar' : 'Ver lista';
+}
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, remove, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6ufS4GT4NA9Fe5_Fi2rYN5qjoq0OIAeA",
+  authDomain: "fusionsport-cumples.firebaseapp.com",
+  databaseURL: "https://fusionsport-cumples-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fusionsport-cumples",
+  storageBucket: "fusionsport-cumples.firebasestorage.app",
+  messagingSenderId: "737064122137",
+  appId: "1:737064122137:web:83796b13a4b3e59ad5b788"
+};
+
+// ⚠️ NOTA: Usar Firebase propio de FusionSport, no el de LetsMonta
+// Reemplazar firebaseConfig con el de fusionsport cuando esté disponible
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const CODE = 'fusionsport';
+const FOODS = ['Sándwich de Nocilla', 'Sándwich mixto', 'Salchipapas', 'Perrito', 'Nuggets', 'Panpizza'];
+const DEFAULT_KIDS = 25;
+
+let currentUser = null;
+let tabs = [];
+let activeTabId = null;
+let currentView = 'lists';
+let unsubscribeLists = null;
+let unsubscribeRegistry = null;
+let modalCallback = null;
+
+// ── AUTH ──
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  const code = document.getElementById('loginCode').value.trim();
+  const err = document.getElementById('loginError');
+  if (!name) { err.textContent = 'Escribe tu nombre.'; err.style.display = 'block'; return; }
+  if (code !== CODE) { err.style.display = 'block'; err.textContent = 'Código incorrecto.'; return; }
+  err.style.display = 'none';
+  currentUser = name;
+  document.getElementById('headerUserName').textContent = name;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  setTimeout(() => {
+    const h = document.querySelector('.app-header');
+    if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+  }, 50);
+  startListening();
+};
+
+function doLogout() {
+  currentUser = null;
+  if (unsubscribeLists) unsubscribeLists();
+  if (unsubscribeRegistry) unsubscribeRegistry();
+  tabs = []; activeTabId = null;
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginName').value = '';
+  document.getElementById('loginCode').value = '';
+};
+
+// ── FIREBASE LISTENERS ──
+function startListening() {
+  const listsRef = ref(db, 'fusionsport/lists');
+  unsubscribeLists = onValue(listsRef, snap => {
+    const data = snap.val() || {};
+    // Merge remote data into local tabs
+    const remoteIds = Object.keys(data);
+    // Add or update tabs
+    remoteIds.forEach(id => {
+      const existing = tabs.find(t => t.id === id);
+      if (existing) {
+        existing.name = data[id].name || existing.name;
+        existing.date = data[id].date || existing.date;
+        existing.kids = data[id].kids || {};
+      } else {
+        tabs.push({ id, name: data[id].name, date: data[id].date, kids: data[id].kids || {} });
+      }
+    });
+    // Remove tabs deleted remotely
+    tabs = tabs.filter(t => remoteIds.includes(t.id));
+    // If active tab was deleted, select first
+    if (activeTabId && !tabs.find(t => t.id === activeTabId)) {
+      activeTabId = tabs.length ? tabs[0].id : null;
+    }
+    if (!activeTabId && tabs.length) activeTabId = tabs[0].id;
+    // Si no hay ninguna lista, crear una por defecto
+    if (tabs.length === 0) {
+      addTab();
+      return;
+    }
+    renderTabs();
+    renderList();
+  });
+
+  const regRef = ref(db, 'fusionsport/registry');
+  unsubscribeRegistry = onValue(regRef, snap => {
+    renderRegistry(snap.val() || {});
+    // Auto-delete entries older than 30 days
+    const data = snap.val() || {};
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    Object.entries(data).forEach(([id, entry]) => {
+      if (entry.savedAt && entry.savedAt < cutoff) {
+        remove(ref(db, `fusionsport/registry/${id}`));
+      }
+    });
+  });
+}
+
+// ── TABS ──
+function addTab() {
+  const n = tabs.length + 1;
+  const name = n === 1 ? 'Cumpleaños' : `Cumpleaños ${n}`;
+  const date = formatDate(new Date());
+  const newRef = push(ref(db, 'fusionsport/lists'));
+  const id = newRef.key;
+  const kids = {};
+  for (let i = 0; i < DEFAULT_KIDS; i++) kids[`k${i}`] = { name: '', food: '' };
+  set(newRef, { name, date, kids });
+  activeTabId = id;
+};
+
+window.closeTab = function(id, e) {
+  e.stopPropagation();
+  const tab = tabs.find(t => t.id === id);
+  if (!tab) return;
+  const hasContent = Object.values(tab.kids || {}).some(k => k.name);
+  if (hasContent) {
+    showModal(
+      '¿Guardar antes de cerrar?',
+      `La lista "${tab.name}" tiene datos. ¿Deseas guardarla en el registro antes de cerrar?`,
+      'Guardar y cerrar', true,
+      () => { saveToRegistry(id, true); },
+      'Cerrar sin guardar',
+      () => { deleteTab(id); }
+    );
+  } else {
+    deleteTab(id);
+  }
+};
+
+function deleteTab(id) {
+  remove(ref(db, `fusionsport/lists/${id}`));
+}
+
+function selectTab(id) {
+  activeTabId = id;
+  renderTabs();
+  renderList();
+};
+
+// ── RENDER TABS ──
+function renderTabs() {
+  const bar = document.getElementById('tabsBar');
+  bar.innerHTML = '';
+  tabs.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (t.id === activeTabId ? ' active' : '');
+    btn.onclick = () => selectTab(t.id);
+    btn.innerHTML = `<span>${t.name}</span><button class="tab-close" onclick="window._closeTab('${t.id}', event)">✕</button>`;
+    bar.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tab-add';
+  addBtn.title = 'Nueva lista';
+  addBtn.textContent = '+';
+  addBtn.onclick = addTab;
+  bar.appendChild(addBtn);
+  document.getElementById('noTabsMsg').classList.toggle('hidden', tabs.length > 0);
+  document.getElementById('listContent').classList.toggle('hidden', tabs.length === 0);
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  if (!activeTabId) return;
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+
+  const kids = tab.kids || {};
+  const kidEntries = Object.entries(kids);
+
+  let html = `
+    <div class="list-header">
+      <input class="list-title-input" value="${escHtml(tab.name)}" 
+        onchange="window._renameTab('${tab.id}', this.value)" placeholder="Nombre del cumpleaños">
+      <span class="list-date">📅 ${tab.date}</span>
+    </div>
+    <table class="kids-table">
+      <thead><tr>
+        <th style="width:32px">#</th>
+        <th>Nombre y apellido</th>
+        <th>Merienda</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+  `;
+
+  kidEntries.forEach(([kid_id, kid], i) => {
+    const foodOptions = FOODS.map(f =>
+      `<option value="${f}" ${kid.food === f ? 'selected' : ''}>${f}</option>`
+    ).join('');
+    html += `
+      <tr>
+        <td class="kid-num">${i + 1}</td>
+        <td><input class="kid-name-input" value="${escHtml(kid.name || '')}" 
+          placeholder="Nombre y apellido"
+          onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"></td>
+        <td><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
+          <option value="">— Merienda —</option>
+          ${foodOptions}
+        </select></td>
+        <td><button class="kid-delete" onclick="window._deleteKid('${tab.id}','${kid_id}')">✕</button></td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table>
+    <button class="add-kid-btn" onclick="window._addKid('${tab.id}')">＋ Añadir niño/niña</button>
+  `;
+
+  // Summary
+  const counts = {};
+  let total = 0, withFood = 0;
+  FOODS.forEach(f => counts[f] = 0);
+  Object.values(kids).forEach(k => {
+    if (k.name) total++;
+    if (k.food) { counts[k.food] = (counts[k.food] || 0) + 1; withFood++; }
+  });
+
+  html += `<div class="summary-card">
+    <div class="summary-title">Resumen</div>
+    <div class="summary-grid">`;
+  FOODS.forEach(f => {
+    html += `<div class="summary-item">
+      <span class="summary-food">${f}</span>
+      <span class="summary-count">${counts[f] || 0}</span>
+    </div>`;
+  });
+  html += `</div>
+    <div class="summary-total">
+      <span>👦 Total niños: <strong>${total}</strong></span>
+      <span>🍽 Con merienda: <strong>${withFood}</strong></span>
+    </div>
+  </div>`;
+
+  html += `<div class="action-btns">
+    <button class="btn-save" onclick="window._saveToRegistry('${tab.id}', false)">💾 Guardar en registro</button>
+    <button class="btn-clear" onclick="window._confirmClear('${tab.id}')">🗑 Eliminar lista</button>
+  </div>`;
+
+  document.getElementById('listContent').innerHTML = html;
+}
+
+// ── KID OPERATIONS ──
+function updateKid(tabId, kidId, field, value) {
+  set(ref(db, `fusionsport/lists/${tabId}/kids/${kidId}/${field}`), value);
+};
+
+function addKid(tabId) {
+  const newKidRef = push(ref(db, `fusionsport/lists/${tabId}/kids`));
+  set(newKidRef, { name: '', food: '' });
+};
+
+function deleteKid(tabId, kidId) {
+  remove(ref(db, `fusionsport/lists/${tabId}/kids/${kidId}`));
+};
+
+function renameTab(tabId, name) {
+  set(ref(db, `fusionsport/lists/${tabId}/name`), name);
+};
+
+// ── SAVE TO REGISTRY ──
+function saveToRegistry(tabId, closeAfter) {
+  const tab = tabs.find(t => t.id === tabId);
+  if (!tab) return;
+  showModal(
+    'Guardar en registro',
+    `¿Guardar "${tab.name}" en el registro de listas?`,
+    'Guardar', false,
+    () => {
+      const entry = {
+        name: tab.name,
+        date: tab.date,
+        kids: tab.kids || {},
+        savedAt: Date.now(),
+        savedBy: currentUser
+      };
+      push(ref(db, 'fusionsport/registry'), entry);
+      if (closeAfter) deleteTab(tabId);
+    }
+  );
+};
+
+// ── CLEAR LIST ──
+function confirmClear(tabId) {
+  const tab = tabs.find(t => t.id === tabId);
+  if (!tab) return;
+  showModal(
+    'Eliminar lista',
+    `¿Eliminar todos los datos de "${tab.name}"? Esta acción no se puede deshacer.`,
+    'Eliminar', false,
+    () => {
+      const kids = {};
+      for (let i = 0; i < DEFAULT_KIDS; i++) kids[`k${i}`] = { name: '', food: '' };
+      set(ref(db, `fusionsport/lists/${tabId}/kids`), kids);
+    }
+  );
+};
+
+// ── REGISTRY ──
+function renderRegistry(data) {
+  const el = document.getElementById('registryList');
+  const entries = Object.entries(data).sort((a, b) => (b[1].savedAt || 0) - (a[1].savedAt || 0));
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">No hay listas guardadas aún.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([id, entry]) => {
+    const counts = {};
+    FOODS.forEach(f => counts[f] = 0);
+    let total = 0;
+    Object.values(entry.kids || {}).forEach(k => {
+      if (k.name) total++;
+      if (k.food) counts[k.food] = (counts[k.food] || 0) + 1;
+    });
+    const tags = FOODS.filter(f => counts[f] > 0)
+      .map(f => `<span class="registry-tag">${f}: <span>${counts[f]}</span></span>`).join('');
+    const saved = entry.savedAt ? new Date(entry.savedAt).toLocaleDateString('es-ES') : '';
+    const kidRows = Object.values(entry.kids || {}).filter(k => k.name).map((k, i) =>
+      `<tr><td style="padding:4px 8px;font-size:13px;color:var(--text2)">${i+1}. ${escHtml(k.name)}</td><td style="padding:4px 8px;font-size:13px;color:var(--text3)">${escHtml(k.food || '—')}</td></tr>`
+    ).join('');
+    return `
+      <div class="registry-card">
+        <div class="registry-card-header">
+          <div>
+            <div class="registry-card-title">${escHtml(entry.name)} — ${entry.date}</div>
+            <div class="registry-card-meta">Guardado el ${saved} por ${escHtml(entry.savedBy || '')} · ${total} niños</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="registry-expand" onclick="toggleRegistry('${id}')" id="exp-btn-${id}" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2)">Ver lista</button>
+            <button class="registry-delete" onclick="window._deleteRegistry('${id}')">✕</button>
+          </div>
+        </div>
+        <div class="registry-summary">${tags || '<span style="font-size:13px;color:var(--text3)">Sin meriendas registradas</span>'}</div>
+        <div id="exp-${id}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+          ${kidRows ? `<table style="width:100%">${kidRows}</table>` : '<p style="font-size:13px;color:var(--text3)">Sin alumnos registrados</p>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteRegistry(id) {
+  showModal(
+    'Eliminar del registro',
+    '¿Eliminar esta lista del registro? No se podrá recuperar.',
+    'Eliminar', false,
+    () => remove(ref(db, `fusionsport/registry/${id}`))
+  );
+};
+
+// ── VIEW NAV ──
+function showView(view) {
+  currentView = view;
+  document.getElementById('viewLists').classList.toggle('hidden', view !== 'lists');
+  document.getElementById('viewRegistry').classList.toggle('hidden', view !== 'registry');
+  document.getElementById('navLists').classList.toggle('active', view === 'lists');
+  document.getElementById('navRegistry').classList.toggle('active', view === 'registry');
+};
+
+// ── MODAL ──
+function showModal(title, msg, confirmText, isBlue, onConfirm, altText, onAlt) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  const btn = document.getElementById('modalConfirm');
+  btn.textContent = confirmText;
+  btn.className = 'btn-modal-confirm' + (isBlue ? ' blue' : '');
+
+  // Clone button to remove old listeners
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, newBtn.previousSibling === null ? btn : btn);
+  document.getElementById('modalConfirm').replaceWith(newBtn);
+  newBtn.id = 'modalConfirm';
+  newBtn.onclick = () => { closeModal(); if (onConfirm) onConfirm(); };
+
+  // Alt button (e.g. "Cerrar sin guardar")
+  let altBtn = document.getElementById('modalAlt');
+  if (altText && onAlt) {
+    if (!altBtn) {
+      altBtn = document.createElement('button');
+      altBtn.id = 'modalAlt';
+      altBtn.className = 'btn-modal-cancel';
+      document.querySelector('.modal-btns').insertBefore(altBtn, newBtn);
+    }
+    altBtn.textContent = altText;
+    const newAlt = altBtn.cloneNode(true);
+    altBtn.replaceWith(newAlt);
+    newAlt.id = 'modalAlt';
+    newAlt.onclick = () => { closeModal(); onAlt(); };
+    newAlt.style.display = '';
+  } else {
+    if (altBtn) altBtn.style.display = 'none';
+  }
+
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  modalCallback = null;
+};
+
+// ── HELPERS ──
+function formatDate(d) {
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+
+// Bind static buttons
+document.getElementById('btnLogin')?.addEventListener('click', doLogin);
+document.getElementById('btnLogout')?.addEventListener('click', doLogout);
+document.getElementById('btnAddTab')?.addEventListener('click', addTab);
+
+// Expose dynamic functions globally for inline handlers in rendered HTML
+window._updateKid = updateKid;
+window._addKid = addKid;
+window._deleteKid = deleteKid;
+window._renameTab = renameTab;
+window._saveToRegistry = saveToRegistry;
+window._confirmClear = confirmClear;
+window._deleteRegistry = deleteRegistry;
+window._closeTab = closeTab;
+window._selectTab = selectTab;
+window._closeModal = closeModal;
+window._showView = showView;
+
+
+document.getElementById('navLists')?.addEventListener('click', () => showView('lists'));
+document.getElementById('navRegistry')?.addEventListener('click', () => showView('registry'));
+
+
+
+
+// ── PWA INSTALL ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'block';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./fusion-sw.js').catch(console.error);
+}
+
+// Login on Enter
+document.getElementById('loginCode').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
