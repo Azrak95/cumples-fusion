@@ -468,8 +468,9 @@ function startListening() {
         existing.name = data[id].name || existing.name;
         existing.date = data[id].date || existing.date;
         existing.kids = data[id].kids || {};
+        existing.saved = data[id].saved || false;
       } else {
-        tabs.push({ id, name: data[id].name, date: data[id].date, kids: data[id].kids || {} });
+        tabs.push({ id, name: data[id].name, date: data[id].date, kids: data[id].kids || {}, saved: data[id].saved || false });
       }
     });
     // Remove tabs deleted remotely
@@ -520,7 +521,8 @@ window.closeTab = function(id, e) {
   const tab = tabs.find(t => t.id === id);
   if (!tab) return;
   const hasContent = Object.values(tab.kids || {}).some(k => k.name);
-  if (hasContent) {
+  const alreadySaved = tab.saved === true;
+  if (hasContent && !alreadySaved) {
     showModal(
       '¿Guardar antes de cerrar?',
       `La lista "${tab.name}" tiene datos. ¿Deseas guardarla en el registro antes de cerrar?`,
@@ -578,7 +580,7 @@ function renderList() {
     <div class="list-header">
       <input class="list-title-input" value="${escHtml(tab.name)}" 
         onchange="window._renameTab('${tab.id}', this.value)" placeholder="Nombre del cumpleaños">
-      <span class="list-date">📅 ${tab.date}</span>
+      <span class="list-date">📅 ${formatDate(new Date())}</span>
     </div>
     <table class="kids-table">
       <thead><tr>
@@ -599,8 +601,11 @@ function renderList() {
         <td class="kid-num">${i + 1}</td>
         <td><input class="kid-name-input" value="${escHtml(kid.name || '')}" 
           placeholder="Nombre y apellido"
-          onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"></td>
-        <td><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
+          onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"
+          onblur="this.value=this.value.trim()"></td>
+        <td><select class="kid-menu-select" 
+          onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)"
+          ontouchstart="this.focus()">
           <option value="">— Merienda —</option>
           ${foodOptions}
         </select></td>
@@ -681,6 +686,8 @@ function saveToRegistry(tabId, closeAfter) {
         savedBy: currentUser
       };
       push(ref(db, 'fusionsport/registry'), entry);
+      // Mark list as saved so closing tab doesn't ask again
+      set(ref(db, `fusionsport/lists/${tabId}/saved`), true);
       if (closeAfter) deleteTab(tabId);
     }
   );
@@ -698,6 +705,7 @@ function confirmClear(tabId) {
       const kids = {};
       for (let i = 0; i < DEFAULT_KIDS; i++) kids[`k${i}`] = { name: '', food: '' };
       set(ref(db, `fusionsport/lists/${tabId}/kids`), kids);
+      set(ref(db, `fusionsport/lists/${tabId}/saved`), false);
     }
   );
 };
