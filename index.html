@@ -482,10 +482,13 @@ function startListening() {
       return;
     }
     renderTabs();
-    // Only re-render if user hasn't interacted recently (prevents clearing selects on Android)
-    const now = Date.now();
-    if (!window._lastInteraction || now - window._lastInteraction > 1000) {
+    // Always update summary; only full re-render when not actively editing a select
+    const focused = document.activeElement;
+    const isEditingSelect = focused && focused.tagName === 'SELECT';
+    if (!isEditingSelect) {
       renderList();
+    } else {
+      renderSummary();
     }
   });
 
@@ -650,9 +653,34 @@ function renderList() {
   document.getElementById('listContent').innerHTML = html;
 }
 
+function renderSummary() {
+  if (!activeTabId) return;
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  const kids = tab.kids || {};
+  const counts = {};
+  let total = 0, withFood = 0;
+  FOODS.forEach(f => counts[f] = 0);
+  Object.values(kids).forEach(k => {
+    if (k.name) total++;
+    if (k.food) { counts[k.food] = (counts[k.food] || 0) + 1; withFood++; }
+  });
+  const grid = document.querySelector('.summary-grid');
+  const totals = document.querySelector('.summary-total');
+  if (grid) {
+    grid.innerHTML = FOODS.map(f => `<div class="summary-item">
+      <span class="summary-food">${f}</span>
+      <span class="summary-count">${counts[f] || 0}</span>
+    </div>`).join('');
+  }
+  if (totals) {
+    totals.innerHTML = `<span>👦 Total niños: <strong>${total}</strong></span>
+      <span>🍽 Con merienda: <strong>${withFood}</strong></span>`;
+  }
+}
+
 // ── KID OPERATIONS ──
 function updateKid(tabId, kidId, field, value) {
-  window._lastInteraction = Date.now();
   set(ref(db, `fusionsport/lists/${tabId}/kids/${kidId}/${field}`), value);
 };
 
