@@ -484,7 +484,12 @@ function startListening() {
       return;
     }
     renderTabs();
-    renderList();
+    if (!document.activeElement || !document.activeElement.closest('#listContent')) {
+      renderList();
+    } else {
+      // User is actively editing - only update data, don't re-render
+      renderTabs();
+    }
   });
 
   const regRef = ref(db, 'fusionsport/registry');
@@ -602,10 +607,10 @@ function renderList() {
           onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"
           onblur="this.value=this.value.trim()"
           onkeydown="if(event.key==='Enter'){this.blur();}"></td>
-        <td><div style="position:relative" ontouchend="this.querySelector('select').focus();this.querySelector('select').click();"><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
+        <td><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
           <option value="">— Merienda —</option>
           ${foodOptions}
-        </select></div></td>
+        </select></td>
         <td><button class="kid-delete" onclick="window._deleteKid('${tab.id}','${kid_id}')">✕</button></td>
       </tr>
     `;
