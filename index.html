@@ -305,50 +305,6 @@
     .app-content { padding: 0.75rem; }
   }
 
-
-  /* ── CUSTOM DROPDOWN (iOS) ── */
-  .custom-select-wrap { position: relative; width: 100%; }
-  .custom-select-btn {
-    width: 100%; border: 1px solid transparent; border-radius: 6px;
-    padding: 6px 28px 6px 8px; font-size: 16px; font-family: inherit;
-    background: transparent; color: var(--text); text-align: left;
-    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: border-color .15s;
-  }
-  .custom-select-btn:focus { border-color: var(--red); outline: none; }
-  .custom-select-btn.placeholder { color: #aaa; }
-  .custom-select-dropdown {
-    display: none; position: fixed; left: 0; right: 0; bottom: 0;
-    background: var(--white); border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-    z-index: 9999; padding: 8px 0 env(safe-area-inset-bottom);
-    max-height: 60vh; overflow-y: auto;
-  }
-  .custom-select-dropdown.open { display: block; }
-  .custom-select-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.3); z-index: 9998;
-  }
-  .custom-select-overlay.open { display: block; }
-  .custom-select-option {
-    padding: 14px 20px; font-size: 16px; font-family: inherit;
-    cursor: pointer; border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-  .custom-select-option:last-child { border-bottom: none; }
-  .custom-select-option:active { background: var(--bg); }
-  .custom-select-option.selected { color: var(--red); font-weight: 700; }
-  .custom-select-option.placeholder-opt { color: #aaa; }
-  .custom-select-header {
-    padding: 12px 20px 8px; font-size: 13px; font-weight: 800;
-    color: var(--text3); border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-
 </style>
 </head>
 <body>
@@ -372,9 +328,6 @@
   </div>
   <button class="install-btn" id="installBtn">📲 Instalar app en el móvil</button>
 </div>
-
-<div class="custom-select-overlay" id="customSelectOverlay" onclick="closeCustomSelect()"></div>
-<div class="custom-select-dropdown" id="customSelectDropdown"></div>
 
 <!-- APP -->
 <div id="appScreen">
@@ -432,48 +385,6 @@ function toggleRegistry(id) {
   btn.textContent = open ? 'Cerrar' : 'Ver lista';
 }
 </script>
-<script>
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-let activeSelectCallback = null;
-let activeSelectBtn = null;
-
-function openCustomSelect(btn, options, currentVal, onChange) {
-  const dropdown = document.getElementById('customSelectDropdown');
-  const overlay = document.getElementById('customSelectOverlay');
-  
-  activeSelectCallback = onChange;
-  activeSelectBtn = btn;
-  
-  let html = '<div class="custom-select-header">Selecciona la merienda</div>';
-  html += `<div class="custom-select-option placeholder-opt${!currentVal ? ' selected' : ''}" data-val="">— Merienda —</div>`;
-  options.forEach(opt => {
-    html += `<div class="custom-select-option${currentVal === opt ? ' selected' : ''}" data-val="${opt}">${opt}</div>`;
-  });
-  
-  dropdown.innerHTML = html;
-  dropdown.querySelectorAll('.custom-select-option').forEach(el => {
-    el.addEventListener('click', () => {
-      const val = el.dataset.val;
-      if (activeSelectCallback) activeSelectCallback(val);
-      if (activeSelectBtn) {
-        activeSelectBtn.textContent = val || '— Merienda —';
-        activeSelectBtn.classList.toggle('placeholder', !val);
-      }
-      closeCustomSelect();
-    });
-  });
-  
-  dropdown.classList.add('open');
-  overlay.classList.add('open');
-}
-
-function closeCustomSelect() {
-  document.getElementById('customSelectDropdown').classList.remove('open');
-  document.getElementById('customSelectOverlay').classList.remove('open');
-  activeSelectCallback = null;
-  activeSelectBtn = null;
-}
-</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -498,16 +409,6 @@ const db = getDatabase(app);
 const CODE = 'fusionsport';
 const FOODS = ['Sándwich de Nocilla', 'Sándwich mixto', 'Salchipapas', 'Perrito', 'Nuggets', 'Panpizza'];
 window._FOODS = FOODS;
-
-function buildFoodCell(tabId, kidId, currentFood) {
-  if (isIOS) {
-    const label = currentFood || '— Merienda —';
-    const cls = currentFood ? 'custom-select-btn' : 'custom-select-btn placeholder';
-    return '<button class="' + cls + '" onclick="openCustomSelect(this, window._FOODS, \'' + currentFood + '\', function(v){ window._updateKid(\'' + tabId + '\',\'' + kidId + '\',\'food\',v); })">' + label + '</button>';
-  } else {
-    const opts = FOODS.map(function(f){ return '<option value="' + f + '"' + (currentFood === f ? ' selected' : '') + '>' + f + '</option>'; }).join('');
-    return '<select class="kid-menu-select" onchange="window._updateKid(\'' + tabId + '\',\'' + kidId + '\',\'food\',this.value)" ontouchstart="document.activeElement&&document.activeElement.blur();setTimeout(()=>this.focus(),50);"><option value="">— Merienda —</option>' + opts + '</select>';
-  }
 }
 const DEFAULT_KIDS = 25;
 
@@ -699,8 +600,12 @@ function renderList() {
         <td><input class="kid-name-input" value="${escHtml(kid.name || '')}" 
           placeholder="Nombre y apellido"
           onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"
-          onblur="this.value=this.value.trim()"></td>
-        <td id="food-cell-${kid_id}">${buildFoodCell('${tab.id}', '${kid_id}', kid.food || '')}</td>
+          onblur="this.value=this.value.trim()"
+          onkeydown="if(event.key==='Enter'){this.blur();}"></td>
+        <td><div style="position:relative" ontouchend="this.querySelector('select').focus();this.querySelector('select').click();"><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
+          <option value="">— Merienda —</option>
+          ${foodOptions}
+        </select></div></td>
         <td><button class="kid-delete" onclick="window._deleteKid('${tab.id}','${kid_id}')">✕</button></td>
       </tr>
     `;
