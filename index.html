@@ -738,7 +738,14 @@ function confirmClear(tabId) {
     `¿Cerrar y eliminar la lista "${tab.name}"? Esta acción no se puede deshacer.`,
     'Eliminar', false,
     () => {
-      deleteTab(tabId);
+      if (tabs.length > 1) {
+        deleteTab(tabId);
+      } else {
+        const kids = {};
+        for (let i = 0; i < DEFAULT_KIDS; i++) kids[`k${i}`] = { name: '', food: '' };
+        set(ref(db, `fusionsport/lists/${tabId}/kids`), kids);
+        set(ref(db, `fusionsport/lists/${tabId}/saved`), false);
+      }
     }
   );
 };
