@@ -600,7 +600,7 @@ function renderList() {
           onchange="window._updateKid('${tab.id}','${kid_id}','name',this.value)"
           onblur="this.value=this.value.trim()"
           onkeydown="if(event.key==='Enter'){this.blur();}"></td>
-        <td><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
+        <td ontouchstart="if(document.activeElement && document.activeElement.tagName==='INPUT'){document.activeElement.blur();}"><select class="kid-menu-select" onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)">
           <option value="">— Merienda —</option>
           ${foodOptions}
         </select></td>
