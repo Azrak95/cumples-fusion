@@ -98,12 +98,7 @@
     border: none; font-family: inherit;
   }
   .tab.active { background: var(--bg); color: #1a1a1a; font-weight: 900; }
-  .tab .tab-close {
-    font-size: 14px; opacity: 0.6; cursor: pointer;
-    background: none; border: none; color: inherit; padding: 0 2px;
-    line-height: 1; font-family: inherit;
-  }
-  .tab .tab-close:hover { opacity: 1; }
+
   .tab-add {
     background: rgba(0,0,0,0.12); border: none; color: #1a1a1a;
     border-radius: 8px 8px 0 0; padding: 7px 12px;
@@ -554,7 +549,7 @@ function renderTabs() {
     const btn = document.createElement('button');
     btn.className = 'tab' + (t.id === activeTabId ? ' active' : '');
     btn.onclick = () => selectTab(t.id);
-    btn.innerHTML = `<span>${t.name}</span><button class="tab-close" onclick="window._closeTab('${t.id}', event)">✕</button>`;
+    btn.innerHTML = `<span>${t.name}</span>`;
     bar.appendChild(btn);
   });
   const addBtn = document.createElement('button');
@@ -605,7 +600,7 @@ function renderList() {
           onblur="this.value=this.value.trim()"></td>
         <td><select class="kid-menu-select" 
           onchange="window._updateKid('${tab.id}','${kid_id}','food',this.value)"
-          ontouchstart="this.focus()">
+          ontouchstart="document.activeElement && document.activeElement.blur(); setTimeout(()=>this.focus(),50);">
           <option value="">— Merienda —</option>
           ${foodOptions}
         </select></td>
@@ -699,13 +694,10 @@ function confirmClear(tabId) {
   if (!tab) return;
   showModal(
     'Eliminar lista',
-    `¿Eliminar todos los datos de "${tab.name}"? Esta acción no se puede deshacer.`,
+    `¿Cerrar y eliminar la lista "${tab.name}"? Esta acción no se puede deshacer.`,
     'Eliminar', false,
     () => {
-      const kids = {};
-      for (let i = 0; i < DEFAULT_KIDS; i++) kids[`k${i}`] = { name: '', food: '' };
-      set(ref(db, `fusionsport/lists/${tabId}/kids`), kids);
-      set(ref(db, `fusionsport/lists/${tabId}/saved`), false);
+      deleteTab(tabId);
     }
   );
 };
