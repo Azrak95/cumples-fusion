@@ -496,7 +496,19 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const CODE = 'fusionsport';
-window._FOODS = 'Sándwich de Nocilla', 'Sándwich mixto', 'Salchipapas', 'Perrito', 'Nuggets', 'Panpizza'];
+const FOODS = ['Sándwich de Nocilla', 'Sándwich mixto', 'Salchipapas', 'Perrito', 'Nuggets', 'Panpizza'];
+window._FOODS = FOODS;
+
+function buildFoodCell(tabId, kidId, currentFood) {
+  if (isIOS) {
+    const label = currentFood || '— Merienda —';
+    const cls = currentFood ? 'custom-select-btn' : 'custom-select-btn placeholder';
+    return '<button class="' + cls + '" onclick="openCustomSelect(this, window._FOODS, \'' + currentFood + '\', function(v){ window._updateKid(\'' + tabId + '\',\'' + kidId + '\',\'food\',v); })">' + label + '</button>';
+  } else {
+    const opts = FOODS.map(function(f){ return '<option value="' + f + '"' + (currentFood === f ? ' selected' : '') + '>' + f + '</option>'; }).join('');
+    return '<select class="kid-menu-select" onchange="window._updateKid(\'' + tabId + '\',\'' + kidId + '\',\'food\',this.value)" ontouchstart="document.activeElement&&document.activeElement.blur();setTimeout(()=>this.focus(),50);"><option value="">— Merienda —</option>' + opts + '</select>';
+  }
+}
 const DEFAULT_KIDS = 25;
 
 let currentUser = null;
