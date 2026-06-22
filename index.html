@@ -482,14 +482,7 @@ function startListening() {
       return;
     }
     renderTabs();
-    // Always update summary; only full re-render when not actively editing a select
-    const focused = document.activeElement;
-    const isEditingSelect = focused && focused.tagName === 'SELECT';
-    if (!isEditingSelect) {
-      renderList();
-    } else {
-      renderSummary();
-    }
+    renderList();
   });
 
   const regRef = ref(db, 'fusionsport/registry');
@@ -600,7 +593,7 @@ function renderList() {
       `<option value="${f}" ${kid.food === f ? 'selected' : ''}>${f}</option>`
     ).join('');
     html += `
-      <tr>
+      <tr data-kid-id="${kid_id}">
         <td class="kid-num">${i + 1}</td>
         <td><input class="kid-name-input" value="${escHtml(kid.name || '')}" 
           placeholder="Nombre y apellido"
@@ -650,7 +643,22 @@ function renderList() {
     <button class="btn-clear" onclick="window._confirmClear('${tab.id}')">🗑 Eliminar lista</button>
   </div>`;
 
+  // Save current select values from DOM (Android fix: prevent clearing on re-render)
+  const domSelects = {};
+  document.querySelectorAll('#listContent tr[data-kid-id] select').forEach(sel => {
+    if (sel.value) domSelects[sel.closest('tr').dataset.kidId] = sel.value;
+  });
+
   document.getElementById('listContent').innerHTML = html;
+
+  // Restore select values that Firebase hasn't confirmed yet
+  Object.entries(domSelects).forEach(([kidId, val]) => {
+    const row = document.querySelector(`#listContent tr[data-kid-id="${kidId}"]`);
+    if (row) {
+      const sel = row.querySelector('select');
+      if (sel && !sel.value && val) sel.value = val;
+    }
+  });
 }
 
 function renderSummary() {
