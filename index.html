@@ -35,11 +35,10 @@
 
   /* ── LOGIN ── */
   #loginScreen {
-    height: 100vh; display: flex; flex-direction: column;
+    min-height: 100vh; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     background: #FFC300;
     padding: 1rem;
-    overflow: hidden;
   }
   .login-logo { font-size: 24px; font-weight: 900; color: #1a1a1a; letter-spacing: -0.5px; margin-bottom: 2px; }
   .login-logo span { color: var(--yellow); }
@@ -57,7 +56,7 @@
     outline: none; transition: border-color .2s;
   }
   .login-field input:focus { border-color: var(--red); }
-  .login-error { font-size: 13px; color: var(--red); font-weight: 700; margin-bottom: 0.75rem; display: none; }
+  .login-error { font-size: 13px; color: #cc0000; font-weight: 700; margin-bottom: 0.75rem; display: none; }
   .btn-primary {
     background: var(--red); color: #1a1a1a; border: none;
     border-radius: var(--radius-sm); padding: 12px; font-size: 15px;
@@ -484,11 +483,10 @@ function startListening() {
       return;
     }
     renderTabs();
-    if (!document.activeElement || !document.activeElement.closest('#listContent')) {
+    // Only re-render if user hasn't interacted recently (prevents clearing selects on Android)
+    const now = Date.now();
+    if (!window._lastInteraction || now - window._lastInteraction > 1000) {
       renderList();
-    } else {
-      // User is actively editing - only update data, don't re-render
-      renderTabs();
     }
   });
 
@@ -655,6 +653,7 @@ function renderList() {
 
 // ── KID OPERATIONS ──
 function updateKid(tabId, kidId, field, value) {
+  window._lastInteraction = Date.now();
   set(ref(db, `fusionsport/lists/${tabId}/kids/${kidId}/${field}`), value);
 };
 
