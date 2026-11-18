@@ -11,9 +11,17 @@
   "icons": [
     {
       "src": "https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
-  ]
+  ],
+  "id": "./",
+  "lang": "es"
 }
