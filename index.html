@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FusionSport">
+<link rel="apple-touch-icon" href="https://fusionsportcuenca.com/wp-content/uploads/2023/11/257873b3-744d-40b0-a64d-964b1e85fd10.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -255,6 +256,17 @@
   }
   .install-btn:hover { background: #333; }
 
+  .ios-guide {
+    display: none; margin-top: 12px; background: var(--white); color: var(--text);
+    border-radius: var(--radius-sm); padding: 14px 16px; font-size: 14px; line-height: 1.5;
+    width: 100%; max-width: 360px; box-shadow: var(--shadow); text-align: left;
+  }
+  .ios-guide b { font-weight: 800; }
+  .ios-guide .ios-close {
+    display: block; margin: 10px 0 0 auto; background: none; border: none;
+    color: var(--text3); font-family: inherit; font-weight: 700; cursor: pointer;
+  }
+
   /* ── MOBILE OPTIMIZATIONS ── */
   * { -webkit-tap-highlight-color: transparent; }
   input, select, button { -webkit-appearance: none; appearance: none; }
@@ -326,6 +338,13 @@
     <button class="btn-primary" id="btnLogin">Entrar</button>
   </div>
   <button class="install-btn" id="installBtn">📲 Instalar app en el móvil</button>
+  <div class="ios-guide" id="iosGuide">
+    Para instalarla en tu iPhone:<br>
+    1. Abre esta página en <b>Safari</b>.<br>
+    2. Pulsa el botón <b>Compartir</b> (⬆️) de la barra inferior.<br>
+    3. Elige <b>"Añadir a pantalla de inicio"</b>.
+    <button class="ios-close" id="iosClose">Entendido</button>
+  </div>
 </div>
 
 <!-- APP -->
@@ -876,20 +895,37 @@ document.getElementById('navRegistry')?.addEventListener('click', () => showView
 
 // ── PWA INSTALL ──
 let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installBtn').style.display = 'block';
+const installBtn = document.getElementById('installBtn');
+const iosGuide = document.getElementById('iosGuide');
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+if (!isStandalone) {
+  // Android / Chrome: el navegador avisa cuando se puede instalar
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+  });
+  // iPhone / iPad: no hay instalación por código, se muestra la guía
+  if (isIOS) installBtn.style.display = 'block';
+}
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') installBtn.style.display = 'none';
+    deferredPrompt = null;
+  } else if (isIOS) {
+    iosGuide.style.display = 'block';
+  }
 });
-document.getElementById('installBtn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
-  deferredPrompt = null;
-});
+document.getElementById('iosClose').addEventListener('click', () => { iosGuide.style.display = 'none'; });
 window.addEventListener('appinstalled', () => {
-  document.getElementById('installBtn').style.display = 'none';
+  installBtn.style.display = 'none';
+  iosGuide.style.display = 'none';
   deferredPrompt = null;
 });
 
